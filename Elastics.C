@@ -712,7 +712,6 @@ void Elastics(const Int_t kin_no = 4) {
     hth2d_ydiff->GetYaxis()->SetTitle("Hodoscope Bar ID");
     
     c1->Print("kinematics_hodo1.pdf");
-    c1->Close();
 
     //-----------------------------------------------------------------------------------------------------------------------------
     // Hodoscope bar efficiencies and resolution plots
@@ -845,7 +844,70 @@ void Elastics(const Int_t kin_no = 4) {
     tex->Draw();
     
     c2->Print("kinematics_hodo2.pdf");
-    c2->Close();
+
+    //========================================================= 2D Bar plots
+
+    const Double_t fEff_c     = 0.173; 
+
+    ofstream tdiffOutFile;
+    tdiffOutFile.open(Form("tdiffFits_%d.txt",kin_no));
+
+    TF1 *f1 = new TF1("f1","[0]+[1]*x",-0.25,0.25);
+    f1->SetLineColor(kRed);    
+
+    Double_t td0[nBarsTDC];
+    Double_t vsc[nBarsTDC];
+
+    for(Int_t i=0; i<nBarsTDC; i++) {
+      hDiff[i]->Fit(f1,"Q");
+      td0[i] = 2*f1->GetParameter(0);
+      vsc[i] = -1./f1->GetParameter(1);
+    }
+
+    tdiffOutFile << endl << "bb.hodotdc.vscint =" << endl;
+    for(Int_t i=0; i<nBarsTDC; i++) {
+      if( fabs(vsc[i] - fEff_c ) > 0.06 )
+	tdiffOutFile << fEff_c << endl;
+      else
+	tdiffOutFile << vsc[i] << endl;
+    }
+
+
+    tdiffOutFile << "bb.hodotdc.tdiffoffset =" << endl;
+    for(Int_t i=0; i<nBarsTDC; i++) {
+      if( fabs(vsc[i] - fEff_c ) > 0.06 )
+	tdiffOutFile << -0.74 << endl;
+      else
+	tdiffOutFile << td0[i] << endl;
+    }
+
+    tdiffOutFile.close();    
+
+    TCanvas* c55 = new TCanvas("c55","",1200,800);
+    c55->Divide(2,2);  
+    c55->cd(1);
+    hDiff[20]->Draw("colz");
+    hDiff[20]->GetXaxis()->SetTitle("y_{FP} [m]");
+    hDiff[20]->GetYaxis()->SetTitle("t_{diff} [ns]");
+    hDiff[20]->Fit(f1,"Q");
+    c55->cd(2);
+    hDiff[35]->Draw("colz");
+    hDiff[35]->GetXaxis()->SetTitle("y_{FP} [m]");
+    hDiff[35]->GetYaxis()->SetTitle("t_{diff} [ns]");
+    hDiff[35]->Fit(f1,"Q");
+    c55->cd(3);
+    hDiff[50]->Draw("colz");
+    hDiff[50]->GetXaxis()->SetTitle("y_{FP} [m]");
+    hDiff[50]->GetYaxis()->SetTitle("t_{diff} [ns]");
+    hDiff[50]->Fit(f1,"Q");
+    c55->cd(4);
+    hDiff[65]->Draw("colz");
+    hDiff[65]->GetXaxis()->SetTitle("y_{FP} [m]");
+    hDiff[65]->GetYaxis()->SetTitle("t_{diff} [ns]");
+    hDiff[65]->Fit(f1,"Q");
+
+    c55->Print("kinematics_hodo3.pdf");
+
   }
   
   //-----------------------------------------------------------------------------------------------------------------------------
@@ -972,7 +1034,6 @@ void Elastics(const Int_t kin_no = 4) {
     tex->Draw();
 
     c3->Print("kinematics_bbcal.pdf");
-    c3->Close();
   }
 
   //-----------------------------------------------------------------------------------------------------------------------------
@@ -1034,7 +1095,6 @@ void Elastics(const Int_t kin_no = 4) {
 
 
     c4->Print("kinematics_aalltracks.pdf");
-    c4->Close();
     
     TCanvas* c5 = new TCanvas("c5","",1200,800);
     c5->Divide(4,2);
@@ -1177,7 +1237,6 @@ void Elastics(const Int_t kin_no = 4) {
     }
 
     c5->Print("kinematics_aftercuts.pdf");
-    c5->Close();
   }
 
 
@@ -1273,12 +1332,8 @@ void Elastics(const Int_t kin_no = 4) {
     hhcal_deltaxyc->GetYaxis()->SetTitle("HCal (Meas - Pred) x[m]");
     
     c8->Print("kinematics_hcal.pdf");
-    c8->Close();
-  
     
   }
-
-
 
   gSystem->Exec(Form("pdfunite  kinem*.pdf Heep_SBS-%d.pdf", kin_no));  
   gSystem->Exec("rm  kinema*.pdf");  
