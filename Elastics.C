@@ -30,9 +30,9 @@ const Bool_t   ApplyPion  = false;
 const Bool_t   DoFit      = false;
 
 const Bool_t   PlotHodo   = true;
-const Bool_t   PlotBBCal  = true;
-const Bool_t   PlotHCal   = true;
-const Bool_t   PlotKine   = true;
+const Bool_t   PlotBBCal  = false;
+const Bool_t   PlotHCal   = false;
+const Bool_t   PlotKine   = false;
 
 void Elastics(const Int_t kin_no = 4) { 
 
@@ -53,7 +53,9 @@ void Elastics(const Int_t kin_no = 4) {
 
   if( kin_no == 4) { //need full LH2 run
 
-    C->Add("$OUT_DIR/e12*full*11548*.root");
+    //C->Add("$OUT_DIR/e12*full*11548*.root");
+    //C->Add("$HODO_FILE_DIR/e12*full*11548_stream0_seg*.root");
+    C->Add("$HODO_FILE_DIR/e12*full*11548_stream0_seg0_0.root");
     
     Eb        = 3.7278;  
     th_bb     = 36.0; 
