@@ -25,16 +25,16 @@ using namespace std;
 
 // options
 const Bool_t   ApplyElec  = true;
-const Bool_t   ApplyElas  = false;
+const Bool_t   ApplyElas  = true;
 const Bool_t   ApplyPion  = false;
 const Bool_t   DoFit      = false;
 
 const Bool_t   PlotHodo   = true;
-const Bool_t   PlotBBCal  = false;
-const Bool_t   PlotHCal   = false;
-const Bool_t   PlotKine   = false;
+const Bool_t   PlotBBCal  = true;
+const Bool_t   PlotHCal   = true;
+const Bool_t   PlotKine   = true;
 
-void Elastics(const Int_t kin_no = 4) { 
+void Elastics(const Int_t kin_no = 4){ 
 
   //-----------------------------------------------------------------------------------------------------------------------------
 
@@ -51,11 +51,14 @@ void Elastics(const Int_t kin_no = 4) {
   Double_t W_min   = 0.0; //0.0, 0.25
   Double_t W_max   = 4.0; //4.0, 1.5
 
-  if( kin_no == 4) { //need full LH2 run
+  if(kin_no == 4){ //need full LH2 run
 
-    //C->Add("$OUT_DIR/e12*full*11548*.root");
-    //C->Add("$HODO_FILE_DIR/e12*full*11548_stream0_seg*.root");
-    C->Add("$HODO_FILE_DIR/e12*full*11548_stream0_seg0_0.root");
+    // Working directory (env. variable $HODO_FILE_DIR = /w/work2/jlab/halla/bbhodo
+    C->Add("$HODO_FILE_DIR/e12*full*11547_stream0_seg*.root");
+    C->Add("$HODO_FILE_DIR/e12*full*11548_stream0_seg*.root");
+    C->Add("$HODO_FILE_DIR/e12*full*11573_stream0_seg*.root");
+    C->Add("$HODO_FILE_DIR/e12*full*11590_stream0_seg*.root");
+    //C->Add("$HODO_FILE_DIR/e12*full*11548_stream0_seg0_0.root"); // testing with one file
     
     Eb        = 3.7278;  
     th_bb     = 36.0; 
@@ -69,8 +72,8 @@ void Elastics(const Int_t kin_no = 4) {
     avI       = 1.17;     
 
     pdiff_off = 0.038;
-  }  
-  else if( kin_no == 7) { //need full LH2 run
+  }
+  else if(kin_no == 7){ //need full LH2 run
     C->Add("$OUT_DIR/*11994*.root");
 
     Eb      = 7.906;   
@@ -87,7 +90,7 @@ void Elastics(const Int_t kin_no = 4) {
     pdiff_off = 0.16;
 
   }
-  else if( kin_no == 11) { //need full LH2 run
+  else if(kin_no == 11){ //need full LH2 run
     C->Add("$OUT_DIR/LH2/e1209019_fullreplay_12313*.root");
     C->Add("$OUT_DIR/LH2/e1209019_fullreplay_12320*.root");
     C->Add("$OUT_DIR/LH2/e1209019_fullreplay_12345*.root");
@@ -106,7 +109,7 @@ void Elastics(const Int_t kin_no = 4) {
     
     pdiff_off = 0.23;
   }
-  else if( kin_no == 14) {
+  else if(kin_no == 14){
     C->Add("$OUT_DIR/LH2/e1209019_fullreplay12313*.root");
     C->Add("$OUT_DIR/LH2/e1209019_fullreplay_12320*.root");
     C->Add("$OUT_DIR/LH2/e1209019_fullreplay_12345*.root");
@@ -125,7 +128,7 @@ void Elastics(const Int_t kin_no = 4) {
 
     pdiff_off = 0.23;
   }
-  else if( kin_no == 8) {
+  else if(kin_no == 8){
     //production
     C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13486_stream0_seg8*.root");
     
@@ -144,8 +147,8 @@ void Elastics(const Int_t kin_no = 4) {
     avI     = 8.0;
     
     pdiff_off = -0.03;
-   }
-  else if( kin_no == 9) {
+  }
+  else if(kin_no == 9){
     //production
     //C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13683_stream0_seg8*.root");
     C->Add("$OUT_DIR/LH2/e1209019_fullreplay_13683*.root"); 
@@ -295,14 +298,21 @@ void Elastics(const Int_t kin_no = 4) {
   TH2D* hhcalsh_blkdiff = new TH2D("hhcalbbsh_blkdiff","",5,0,5,5,0,5);
   TH2D* hhcalps_blkdiff = new TH2D("hhcalbbps_blkdiff","",5,0,5,5,0,5);
   
+  // Hodoscope parameters
+  // Pre-selection
+  TH1D* htd0 = new TH1D("htd0",";Bar no.; time diff. offset [ns]",90,1,90);
+  TH1D* hvsc = new TH1D("hvsc",";Bar no.; v_{scint} [m/ns]",90,1,90);
+  // Post-selection
+  TH1D* htd0_post = new TH1D("htd0_post",";Bar no.; time diff. offset [ns]",90,1,90);
+  TH1D* hvsc_post = new TH1D("hvsc_post",";Bar no.; v_{scint} [m/ns]",90,1,90);
 
-  const Int_t    nBarsTDC   = 90;
+  const Int_t nBarsTDC = 90;
   TH1D* hResx[nBarsTDC];
   TH1D* hResy[nBarsTDC];
   TH2D* hDiff[nBarsTDC];
   
   for(Int_t i=0; i<nBarsTDC; i++) {
-    hDiff[i] = new TH2D(Form("hDiff_%d",i), "", 50, -0.35, 0.35, 50, -7., 7. );
+    hDiff[i] = new TH2D(Form("hDiff_%d",i), ";y_{fp} [m]; #Delta_{t} [ns]", 50, -0.35, 0.35, 50, -7., 7. );
   }
   
   Double_t Mp = 0.93827;
@@ -316,24 +326,20 @@ void Elastics(const Int_t kin_no = 4) {
   
   //-----------------------------------------------------------------------------------------------------------------------------
 
-  for(Long64_t ev=0; ev<nentries;ev++) {
-
+  for(Long64_t ev=0; ev<nentries;ev++){
     T->GetEntry(ev);
     
-    if( ev%10000 == 0 )
-      cout << ev << endl;
+    if( ev%10000 == 0 ) cout << ev << endl;
 
     //-----------------------------------------------------------------------------------------------------------------------------
     // Pre-cuts -- these should be in the replay cdef
     //-----------------------------------------------------------------------------------------------------------------------------
-
     if( T->bb_tr_n <= 0 ) continue; 
     if( T->bb_ps_e < 0.05 ) continue;
 
     //-----------------------------------------------------------------------------------------------------------------------------
     // Kinematic cuts
     //-----------------------------------------------------------------------------------------------------------------------------
-
     const Double_t hodo_dist  = 1.8545;
     const Double_t show_dist  = 1.902;
 
@@ -353,7 +359,7 @@ void Elastics(const Int_t kin_no = 4) {
     Double_t py1 = pc * TMath::Sin( th_bb+T->bb_tr_tg_ph[0] ) * TMath::Sin( T->bb_tr_tg_th[0] );
     Double_t pz1 = pc * TMath::Cos( th_bb+T->bb_tr_tg_ph[0] );
 
-    // _tg = target plane,  tr_ = local transport coord system (focal plane variables) 
+    // _tg = target plane,  _tr = local transport coord system (focal plane variables) 
     Double_t px = T->bb_tr_px[0];
     Double_t py = T->bb_tr_py[0];
     Double_t pz = T->bb_tr_pz[0];
@@ -432,7 +438,7 @@ void Elastics(const Int_t kin_no = 4) {
     //Elastic Cuts Based on Kinematic Setting
     Double_t hcal_ysig, hcal_xsig, hcal_ymean, hcal_xmean, hcal_xcut, hcal_ycut, pdiffcut;
 
-    if (kin_no == 4){//not yet calibrated
+    if(kin_no == 4){//not yet calibrated
       sh_min  = 0.65;
       sh_max  = 0.95;
       ps_min  = 0.1;
@@ -444,7 +450,7 @@ void Elastics(const Int_t kin_no = 4) {
       
       pdiffcut = 0.1;
     }
-    else if (kin_no == 7){//not yet calibrated
+    else if(kin_no == 7){//not yet calibrated
       sh_min  = 0.75;
       sh_max  = 1.05;
       ps_min  = 0.07;
@@ -456,7 +462,7 @@ void Elastics(const Int_t kin_no = 4) {
       
       pdiffcut = 0.1;
     }
-    else if (kin_no == 11){//not yet calibrated
+    else if(kin_no == 11){//not yet calibrated
       sh_min  = 0.75;
       sh_max  = 1.05;
       ps_min  = 0.07;
@@ -480,7 +486,7 @@ void Elastics(const Int_t kin_no = 4) {
       
       pdiffcut = 0.1;
     }
-    else if (kin_no == 8){//calibrated
+    else if(kin_no == 8){//calibrated
       sh_min  = 0.70;
       sh_max  = 1.05;
       ps_min  = 0.07;
@@ -492,7 +498,7 @@ void Elastics(const Int_t kin_no = 4) {
       
       pdiffcut = 1.0;
     }
-    else if (kin_no == 9 ){//calibrated
+    else if(kin_no == 9){//calibrated
       sh_min  = 0.70;
       sh_max  = 0.95;
       ps_min  = 0.12;
@@ -508,20 +514,20 @@ void Elastics(const Int_t kin_no = 4) {
     hcal_xcut = 3. * hcal_xsig;
     hcal_ycut = 3. * hcal_ysig;
     
-    if( ApplyElec ) { 
+    if(ApplyElec){
       if( T->bb_ps_e/T->bb_tr_p[0] < ps_min ) continue;
-      if( (T->bb_ps_e/T->bb_tr_p[0] + sh_e*T->bb_sh_e/T->bb_tr_p[0])< sh_min ) continue;
-      if( (T->bb_ps_e/T->bb_tr_p[0] + sh_e*T->bb_sh_e/T->bb_tr_p[0])> sh_max) continue;
+      if( (T->bb_ps_e/T->bb_tr_p[0] + sh_e*T->bb_sh_e/T->bb_tr_p[0]) < sh_min ) continue;
+      if( (T->bb_ps_e/T->bb_tr_p[0] + sh_e*T->bb_sh_e/T->bb_tr_p[0]) > sh_max ) continue;
       if( T->bb_tr_p[0] < 0.25*pcent ) continue;
       if( T->e_kine_W2 < W_min ) continue; 
       if( T->e_kine_W2 > W_max ) continue;   
     }
-    else if (ApplyPion) { 
+    else if(ApplyPion){ 
       if( T->bb_ps_e/T->bb_tr_p[0] > ps_min ) continue;
       if( (T->bb_ps_e/T->bb_tr_p[0] + sh_e*T->bb_sh_e/T->bb_tr_p[0]) > sh_min ) continue;
     }
     
-    if( ApplyElas ) {
+    if(ApplyElas){
       //if( fabs(delta_x - hcal_xmean) > hcal_xcut) continue;
       //if( fabs(delta_y - hcal_ymean) > hcal_ycut ) continue;
       if( fabs(pdiff) > pdiffcut ) continue;
@@ -560,42 +566,40 @@ void Elastics(const Int_t kin_no = 4) {
     //-----------------------------------------------------------------------------------------------------------------------------
     // GEM-Hodoscope track matching
     //-----------------------------------------------------------------------------------------------------------------------------
-      if ( PlotHodo ){
+    if (PlotHodo){
 
-	hth_tx->Fill( T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0] ); // track x at hodo (dispersive)
-	hth_ty->Fill( T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0] ); // track y at hodo (non-dispersive)
+      hth_tx->Fill( T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0] ); // track x at hodo (dispersive)
+      hth_ty->Fill( T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0] ); // track y at hodo (non-dispersive)
 	
-	hth2d_txy->Fill( T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0], T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0] );
+      hth2d_txy->Fill( T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0], T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0] );
 	
-	hth_tmult->Fill(T->bb_tr_n-1); // BB track "id" 
+      hth_tmult->Fill(T->bb_tr_n-1); // BB track "id" 
 	
-	//-----------------------------------------------------------------------------------------------------------------------------
+      //-----------------------------------------------------------------------------------------------------------------------------
 	
-	if( T->bb_hodotdc_clus_trackindex[0] == 0 ) {  // only hodo clusters that match bb track id = 0 (I guess redundndat for single track events)	
+      if( T->bb_hodotdc_clus_trackindex[0] == 0 ) {  // only hodo clusters that match bb track id = 0 (I guess redundant for single track events)	
+	hth_csize->Fill( T->bb_hodotdc_clus_size[0] );
+	hth_hmult->Fill( T->bb_hodotdc_clus_trackindex[0] ); // track id that is matched
 	  
-	  hth_csize->Fill( T->bb_hodotdc_clus_size[0] );
-	  hth_hmult->Fill( T->bb_hodotdc_clus_trackindex[0] ); // track id that is matched
+	hth_xmean->Fill( T->bb_hodotdc_clus_xmean[0] ); // mean x position of hodo cluster
+	hth_xdiff->Fill( (T->bb_hodotdc_clus_xmean[0] - (T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0])) );
 	  
-	  hth_xmean->Fill( T->bb_hodotdc_clus_xmean[0] ); // mean x position of hodo cluster
-	  hth_xdiff->Fill( (T->bb_hodotdc_clus_xmean[0] - (T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0])) );
+	hth_ymean->Fill( T->bb_hodotdc_clus_ymean[0] ); // mean y position of hodo cluster
+	hth_ydiff->Fill( (T->bb_hodotdc_clus_ymean[0] - (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])) );
 	  
-	  hth_ymean->Fill( T->bb_hodotdc_clus_ymean[0] ); // mean y position of hodo cluster
-	  hth_ydiff->Fill( (T->bb_hodotdc_clus_ymean[0] - (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])) );
+	Int_t maxbar = (Int_t)T->bb_hodotdc_clus_id[0]; 
 	  
-	  Int_t maxbar = (Int_t)T->bb_hodotdc_clus_id[0]; 
+	hth2d_xdiff->Fill( (T->bb_hodotdc_clus_xmean[0] - (T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0])), maxbar );
+	hth2d_ydiff->Fill( (T->bb_hodotdc_clus_ymean[0] - (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])), maxbar );
+	hth2d_tmean->Fill( T->bb_hodotdc_clus_tmean[0], maxbar );
 	  
-	  hth2d_xdiff->Fill( (T->bb_hodotdc_clus_xmean[0] - (T->bb_tr_x[0] + hodo_dist * T->bb_tr_th[0])), maxbar );
-	  hth2d_ydiff->Fill( (T->bb_hodotdc_clus_ymean[0] - (T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0])), maxbar );
-	  hth2d_tmean->Fill( T->bb_hodotdc_clus_tmean[0], maxbar );
+	hth2d_xymean->Fill( T->bb_hodotdc_clus_ymean[0], T->bb_hodotdc_clus_xmean[0] );
 	  
-	  hth2d_xymean->Fill( T->bb_hodotdc_clus_ymean[0], T->bb_hodotdc_clus_xmean[0] );
+	hth2d_Diff->Fill((T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]), 0.5*T->bb_hodotdc_clus_tdiff[0] ); // note th 1/2
 	  
-	  hth2d_Diff->Fill((T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]), 0.5*T->bb_hodotdc_clus_tdiff[0] ); // note th 1/2
-	  
-	  hDiff[maxbar]->Fill((T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]), 0.5*T->bb_hodotdc_clus_tdiff[0] ); // note th 1/2
-	  
-	}
+	hDiff[maxbar]->Fill((T->bb_tr_y[0] + hodo_dist * T->bb_tr_ph[0]), 0.5*T->bb_hodotdc_clus_tdiff[0] ); // note th 1/2
       }
+    }
 
   }
   
@@ -796,7 +800,6 @@ void Elastics(const Int_t kin_no = 4) {
       esigy[i] = gausf->GetParError(2);
     }    
 
-  
     TGraphErrors* gResx = new TGraphErrors( nBarsTDC, Bar, sigx, eBar, esigx );
     gResx->SetMarkerColor( 2 );
     gResx->SetLineColor( 2 );
@@ -849,7 +852,7 @@ void Elastics(const Int_t kin_no = 4) {
 
     //========================================================= 2D Bar plots
 
-    const Double_t fEff_c     = 0.173; 
+    const Double_t fEff_c = 0.173; 
 
     ofstream tdiffOutFile;
     tdiffOutFile.open(Form("tdiffFits_%d.txt",kin_no));
@@ -864,23 +867,33 @@ void Elastics(const Int_t kin_no = 4) {
       hDiff[i]->Fit(f1,"Q");
       td0[i] = 2*f1->GetParameter(0);
       vsc[i] = -1./f1->GetParameter(1);
+
+      htd0->Fill(i+1, td0[i]);
+      hvsc->Fill(i+1, vsc[i]);
     }
 
     tdiffOutFile << endl << "bb.hodotdc.vscint =" << endl;
     for(Int_t i=0; i<nBarsTDC; i++) {
-      if( fabs(vsc[i] - fEff_c ) > 0.06 )
+      if( fabs(vsc[i] - fEff_c) > 0.06 ){
 	tdiffOutFile << fEff_c << endl;
-      else
+	hvsc_post->Fill(i+1, fEff_c);
+      }
+      else{
 	tdiffOutFile << vsc[i] << endl;
+	hvsc_post->Fill(i+1, vsc[i]);
+      }   
     }
-
 
     tdiffOutFile << "bb.hodotdc.tdiffoffset =" << endl;
     for(Int_t i=0; i<nBarsTDC; i++) {
-      if( fabs(vsc[i] - fEff_c ) > 0.06 )
+      if( fabs(vsc[i] - fEff_c) > 0.06 ){
 	tdiffOutFile << -0.74 << endl;
-      else
+	htd0_post->Fill(i+1, -0.74);
+      }
+      else{
 	tdiffOutFile << td0[i] << endl;
+	htd0_post->Fill(i+1, td0[i]);
+      }
     }
 
     tdiffOutFile.close();    
@@ -909,7 +922,25 @@ void Elastics(const Int_t kin_no = 4) {
     hDiff[65]->Fit(f1,"Q");
 
     c55->Print("kinematics_hodo3.pdf");
-
+    
+    // Write hodo plots to file
+    TFile *fPlots = new TFile("$HODO_FILE_DIR/Plots_tdiff_Elastics.root", "RECREATE");
+    //TFile *fPlots = new TFile("$OUT_DIR/Plots_tdiff.root", "RECREATE"); // When testing, files go to /scratch/
+    
+    // Parameter histos
+    htd0->Write();
+    htd0_post->Write();
+    hvsc->Write();
+    hvsc_post->Write();
+    
+    // y_tgt vs t_diff histos
+    TString HistName;
+    for(Int_t i=0; i<nBarsTDC; i++){
+      HistName = "Bar " + to_string(i);
+      hDiff[i]->SetTitle(HistName);      
+      hDiff[i]->Write();
+    }
+    fPlots->Close();
   }
   
   //-----------------------------------------------------------------------------------------------------------------------------
@@ -1095,7 +1126,6 @@ void Elastics(const Int_t kin_no = 4) {
     hkin_pdiff->Draw();
     hkin_pdiff->GetXaxis()->SetTitle("p_{bbtrack} - p_{#theta exp} [GeV/c]");
 
-
     c4->Print("kinematics_aalltracks.pdf");
     
     TCanvas* c5 = new TCanvas("c5","",1200,800);
@@ -1145,7 +1175,6 @@ void Elastics(const Int_t kin_no = 4) {
     hkin_Wc->SetLineColor(2);
     hkin_Wc->GetXaxis()->SetTitle("W^{2} [GeV^{2}]");
 
-    
     c5->cd(8);
     hkin_pdiffc->Draw();
     hkin_pdiffc->SetLineColor(2);
@@ -1241,8 +1270,7 @@ void Elastics(const Int_t kin_no = 4) {
     c5->Print("kinematics_aftercuts.pdf");
   }
 
-
-  
+ 
   //-----------------------------------------------------------------------------------------------------------------------------
   // HCal plots
   //-----------------------------------------------------------------------------------------------------------------------------
@@ -1338,7 +1366,7 @@ void Elastics(const Int_t kin_no = 4) {
   }
 
   gSystem->Exec(Form("pdfunite  kinem*.pdf Heep_SBS-%d.pdf", kin_no));  
-  gSystem->Exec("rm  kinema*.pdf");  
+  gSystem->Exec("rm  kinema*.pdf");    
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------
